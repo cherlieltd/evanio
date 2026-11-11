@@ -18,25 +18,34 @@ export const requireAuth: MiddlewareHandler<{
     return c.json({ error: "Missing or invalid Authorization header" }, 401);
   }
 
-  const supabase = getSupabaseAnon();
-  const { data, error } = await supabase.auth.getUser(token);
+  try {
+    const supabase = getSupabaseAnon();
+    const { data, error } = await supabase.auth.getUser(token);
 
-  if (error || !data.user) {
-    return c.json({ error: "Invalid or expired token" }, 401);
+    if (error || !data.user) {
+      return c.json({ error: "Invalid or expired token" }, 401);
+    }
+
+    const { getSupabaseAdmin } = await import("../lib/supabase.js");
+    const { data: profile } = await getSupabaseAdmin()
+      .from("profiles")
+      .select("suspended")
+      .eq("id", data.user.id)
+      .maybeSingle();
+
+    if (profile?.suspended) {
+      return c.json({ error: "Account suspended" }, 403);
+    }
+
+    c.set("accessToken", token);
+    c.set("user", data.user);
+    await next();
+  } catch (error) {
+    console.error("requireAuth failed", error);
+    const message =
+      error instanceof Error && error.message.startsWith("Invalid environment")
+        ? "Server misconfigured: missing Supabase env vars"
+        : "Authentication service unavailable";
+    return c.json({ error: message }, 503);
   }
-
-  const { getSupabaseAdmin } = await import("../lib/supabase.js");
-  const { data: profile } = await getSupabaseAdmin()
-    .from("profiles")
-    .select("suspended")
-    .eq("id", data.user.id)
-    .maybeSingle();
-
-  if (profile?.suspended) {
-    return c.json({ error: "Account suspended" }, 403);
-  }
-
-  c.set("accessToken", token);
-  c.set("user", data.user);
-  await next();
 };

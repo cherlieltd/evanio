@@ -28,7 +28,19 @@ const app = new Hono<{ Variables: AppVariables }>();
 const allowedOrigins = [
   process.env.WEB_ORIGIN ?? "http://localhost:3000",
   process.env.ADMIN_ORIGIN ?? "http://localhost:3001",
-];
+  "https://www.evanio.ai",
+  "https://evanio.ai",
+  "https://admin.evanio.ai",
+].filter((value, index, all) => all.indexOf(value) === index);
+
+app.onError((error, c) => {
+  console.error("Unhandled API error", error);
+  const message =
+    error instanceof Error && error.message.startsWith("Invalid environment")
+      ? "Server misconfigured: missing Supabase env vars"
+      : "Internal server error";
+  return c.json({ error: message }, 500);
+});
 
 // Public embed endpoints must accept any customer origin.
 app.route("/", widgetScriptRoutes);
@@ -41,7 +53,8 @@ app.use("*", async (c, next) => {
   }
 
   return cors({
-    origin: allowedOrigins,
+    origin: (origin) =>
+      !origin || allowedOrigins.includes(origin) ? origin || allowedOrigins[0] : null,
     allowHeaders: ["Content-Type", "Authorization"],
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     credentials: true,

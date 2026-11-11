@@ -33,6 +33,8 @@ businessRoutes.post("/business", requireAuth, async (c) => {
     }
 
     console.error("POST /business failed", error);
-    return c.json({ error: "Failed to create business" }, 500);
+    const detail =
+      error instanceof Error ? error.message : "Failed to create business";
+    return c.json({ error: detail }, 500);
   }
 });
