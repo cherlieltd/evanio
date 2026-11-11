@@ -1,0 +1,33 @@
+{
+  "name": "@evanio/backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "dev:worker:video": "tsx watch src/workers/video.ts",
+    "dev:worker:posts": "tsx watch src/workers/posts.ts",
+    "worker:video": "tsx src/workers/video.ts",
+    "worker:posts": "tsx src/workers/posts.ts",
+    "build": "tsc && node -e \"require('fs').cpSync('src/public','dist/public',{recursive:true})\"",
+    "start": "node dist/index.js",
+    "start:worker:video": "node dist/workers/video.js",
+    "start:worker:posts": "node dist/workers/posts.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.14.1",
+    "@supabase/supabase-js": "^2.49.4",
+    "bullmq": "^5.49.0",
+    "hono": "^4.7.8",
+    "ioredis": "^5.6.1",
+    "openai": "^7.55.0",
+    "stripe": "^23.1.0",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}

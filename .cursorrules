@@ -1,0 +1,20 @@
+# Evanio.ai
+
+AI marketing SaaS for US small businesses.
+
+## Structure (monorepo)
+
+- `frontend/web`: Next.js 15 (App Router), TypeScript, Tailwind, shadcn/ui. Public site + user dashboard. Deployed on Vercel.
+- `frontend/admin`: separate Next.js app for admins only. Deployed on Vercel at admin.evanio.ai.
+- `backend`: Node.js + TypeScript + Hono. Deployed on Railway. BullMQ + Redis for background jobs.
+- `supabase`: SQL migrations. Supabase for Postgres, Auth, Storage.
+
+## Rules
+
+- Frontend never holds secret keys. Only `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_API_URL`.
+- All AI calls, credit deduction, Stripe and Meta logic happen ONLY in the backend.
+- Frontend calls backend with the Supabase access token in the Authorization header; backend verifies it.
+- Use zod for validation. Use environment variables, never hardcode keys.
+- Keep code modular: routes -> services. Small files, clear names.
+- Every new table has Row Level Security enabled.
+- Ask before deleting files or changing the folder structure.
