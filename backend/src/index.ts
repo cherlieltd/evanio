@@ -53,12 +53,31 @@ app.use("*", async (c, next) => {
   }
 
   return cors({
-    origin: (origin) =>
-      !origin || allowedOrigins.includes(origin) ? origin || allowedOrigins[0] : null,
+    origin: (origin) => {
+      if (!origin) return allowedOrigins[0];
+      return allowedOrigins.includes(origin) ? origin : null;
+    },
     allowHeaders: ["Content-Type", "Authorization"],
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     credentials: true,
+    maxAge: 86400,
   })(c, next);
+});
+
+// Ensure preflight always advertises write methods (some edges cache OPTIONS).
+app.options("*", (c) => {
+  const origin = c.req.header("Origin");
+  if (origin && allowedOrigins.includes(origin)) {
+    c.header("Access-Control-Allow-Origin", origin);
+    c.header("Access-Control-Allow-Credentials", "true");
+  }
+  c.header(
+    "Access-Control-Allow-Methods",
+    "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+  );
+  c.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  c.header("Access-Control-Max-Age", "86400");
+  return c.body(null, 204);
 });
 
 app.route("/", healthRoutes);
